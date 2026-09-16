@@ -1,0 +1,72 @@
+name: 코레일 취소표 모니터
+
+"on":
+  schedule:
+    # 매시 정각의 혼잡을 피해서 5분마다 실행합니다. GitHub 스케줄은 UTC입니다.
+    - cron: "2/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: write
+  issues: write
+
+concurrency:
+  group: korail-seat-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: 저장소 받기
+        uses: actions/checkout@v4
+
+      - name: Python 준비
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: 의존성 설치
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+
+      - name: 좌석 확인
+        id: monitor
+        env:
+          KORAIL_MEMBER_ID: ${{ secrets.KORAIL_MEMBER_ID }}
+          KORAIL_PASSWORD: ${{ secrets.KORAIL_PASSWORD }}
+        run: python monitor.py
+
+      - name: 아이폰 알림용 GitHub 이슈 만들기
+        if: steps.monitor.outputs.has_notification == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NOTICE_TITLE: ${{ steps.monitor.outputs.notification_title }}
+        run: >-
+          gh issue create
+          --title "$NOTICE_TITLE"
+          --body-file .monitor/notification.md
+          --assignee "$GITHUB_REPOSITORY_OWNER"
+
+      - name: 중복 알림 방지 상태 저장
+        if: steps.monitor.outputs.state_changed == 'true'
+        run: |
+          git config user.name "korail-seat-monitor"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add monitor_state.json
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "chore: update monitor state [skip ci]"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: 감시 기간 종료 후 자동 중지
+        if: steps.monitor.outputs.expired == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh api --method PUT
+          "repos/$GITHUB_REPOSITORY/actions/workflows/monitor.yml/disable"
