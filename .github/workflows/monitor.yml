@@ -69,6 +69,17 @@ jobs:
           git pull --rebase origin main
           git push origin HEAD:main
 
+      - name: 초기 시험 실행 기록
+        if: github.event_name == 'push'
+        run: |
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > initial_run_status.txt
+          git config user.name "korail-seat-monitor"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add initial_run_status.txt
+          git commit -m "chore: record initial monitor run [skip ci]"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
       - name: 감시 기간 종료 후 자동 중지
         if: steps.monitor.outputs.expired == 'true'
         env:
