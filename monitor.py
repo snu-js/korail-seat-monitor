@@ -43,6 +43,8 @@ def _default_state() -> dict[str, Any]:
         "failure_count": 0,
         "outage_notified": False,
         "last_error_type": None,
+        "last_error_code": None,
+        "last_error_message": None,
     }
 
 
@@ -340,6 +342,8 @@ def main() -> int:
         failure_count = int(state.get("failure_count", 0)) + 1
         state["failure_count"] = failure_count
         state["last_error_type"] = type(error).__name__
+        state["last_error_code"] = getattr(error, "code", None)
+        state["last_error_message"] = str(error)[:500]
         should_notify = (
             failure_count >= OUTAGE_THRESHOLD
             and not bool(state.get("outage_notified", False))
@@ -370,6 +374,8 @@ def main() -> int:
             "failure_count": 0,
             "outage_notified": False,
             "last_error_type": None,
+            "last_error_code": None,
+            "last_error_message": None,
         }
     )
     if newly_available:
