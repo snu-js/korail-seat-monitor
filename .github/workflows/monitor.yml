@@ -11,6 +11,8 @@ name: 코레일 취소표 모니터
       - main
     paths:
       - ".github/workflows/monitor.yml"
+      - "monitor.py"
+      - "requirements.txt"
 
 permissions:
   actions: write
