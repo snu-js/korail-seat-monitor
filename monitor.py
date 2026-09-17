@@ -200,11 +200,12 @@ def query_korail(member_id: str, password: str, now: datetime) -> list[Any]:
     """Query KORAIL's mobile service without performing any mutation."""
     from korail_mobile_api import (
         KorailClient,
+        KorailConfig,
         KorailNoResultsError,
         TrainSearchQuery,
     )
 
-    client = KorailClient()
+    client = KorailClient(KorailConfig(enable_dynapath=True))
     trains: list[Any] = []
     try:
         client.login(member_id, password)
