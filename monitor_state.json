@@ -1,7 +1,7 @@
 {
   "available_keys": [],
-  "failure_count": 0,
-  "last_error_type": null,
+  "failure_count": 1,
+  "last_error_type": "KorailDynaPathRequiredError",
   "outage_notified": false,
   "version": 1
 }
