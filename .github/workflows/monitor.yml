@@ -5,6 +5,12 @@ name: 코레일 취소표 모니터
     # 매시 정각의 혼잡을 피해서 5분마다 실행합니다. GitHub 스케줄은 UTC입니다.
     - cron: "2/5 * * * *"
   workflow_dispatch:
+  # 설정 변경 시 즉시 한 번 시험합니다. 상태 저장 커밋에는 실행되지 않습니다.
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/monitor.yml"
 
 permissions:
   actions: write
